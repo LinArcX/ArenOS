@@ -1,9 +1,12 @@
 #!/bin/bash
 
-# Requirements:
-#   bash
-#   curl
-#   gnupg2
+# Depenendencies
+#   build.sh:
+#     bash
+#     curl
+#     gnupg2
+#   Linux:
+#     bc
 
 # Define colors using ANSI escape codes
 RED='\033[0;31m'
@@ -22,7 +25,7 @@ BUSYBOX_VERSION=1.36.1
 BUSYBOX_URL=https://busybox.net/downloads/busybox-$BUSYBOX_VERSION.tar.bz2
 
 build_src_output_dir() {
-  echo -e "${GREEN}>>> Creating src/ and output/ directories.${NC}\n"
+  echo -e "\n${GREEN}>>> Creating src/ and output/ directories.${NC}"
   mkdir -p src
   mkdir -p output
 }
@@ -39,33 +42,37 @@ check_url() {
 }
 
 extract_build_linux() {
-  echo -e "${GREEN}>>> Extracting linux-$KERNEL_VERSION.tar.xz into src/ ...${NC}\n"
-  tar -xvf src/linux-$KERNEL_VERSION.tar -C ./src
+  echo -e "\n${GREEN}>>> Extracting linux-$KERNEL_VERSION.tar.xz into src/ ...${NC}"
+  tar -xvf linux-$KERNEL_VERSION.tar -C .
 
-  echo -e "${GREEN}>>> Building linux-$KERNEL_VERSION ...${NC}\n"
+  echo -e "\n${GREEN}>>> Building linux-$KERNEL_VERSION ...${NC}"
   cd linux-$KERNEL_VERSION 
     make defconfig
-    make -j12 && echo "${GREEN}>>> linux-${KERNEL_VERSION} successfully built.${NC}\n" || echo "${RED}!!! linux-${KERNEL_VERSION} make failed!${NC}\n" && exit
+    make -j12 && echo -e "\n${GREEN}>>> linux-${KERNEL_VERSION} successfully built.${NC}" || echo -e "\n${RED}!!! linux-${KERNEL_VERSION} make failed!${NC}" && exit
   cd ..
 }
 
 verify_linux_signature() {
-  echo -e "${GREEN}>>> Import keys belonging to Linus Torvalds and Greg Kroah-Hartman.(Linux developers)${NC}\n"
+  echo -e "\n${GREEN}>>> Import keys belonging to Linus Torvalds and Greg Kroah-Hartman.(Linux developers)${NC}"
   gpg2 --locate-keys torvalds@kernel.org gregkh@kernel.org
 
-  echo -e "${GREEN}>>> Trust keys belonging Greg Kroah-Hartman.(Linux developer)${NC}\n"
+  echo -e "\n${GREEN}>>> Trust keys belonging Greg Kroah-Hartman.(Linux developer)${NC}"
   gpg2 --tofu-policy good 38DBBDC86092693E
 
-  echo -e "${GREEN}>>> Verifing signature ...${NC}\n"
-  $DOWNLOADER -O linux-$KERNEL_VERSION.tar.sign $KERNEL_SIG_URL
-  unxz linux-$KERNEL_VERSION.tar.xz
-  gpg2 --trust-model tofu linux-$KERNEL_VERSION.tar.sign linux-$KERNEL_VERSION.tar
+  echo -e "\n${GREEN}>>> Downloading signature ...${NC}"
+  $DOWNLOADER -o linux-$KERNEL_VERSION.tar.sign $KERNEL_SIG_URL
+
+  echo -e "\n${GREEN}>>> Verifing signature ...${NC}"
+  if [ -f "linux-$KERNEL_VERSION.tar.xz" ]; then
+    unxz linux-$KERNEL_VERSION.tar.xz
+  fi
+  gpg --trust-model tofu --verify linux-$KERNEL_VERSION.tar.sign linux-$KERNEL_VERSION.tar
 
   if [ $? -eq 0 ]; then
-    echo -e "${GREEN}>>> linux-$KERNEL_VERSION.tar.sign is valid.${NC}\n"
+    echo -e "\n${GREEN}>>> linux-$KERNEL_VERSION.tar.sign is valid.${NC}"
     return 0
   else
-    echo -e "${RED}>>> linux-$KERNEL_VERSION.tar.sign is invalid!${NC}\n"
+    echo -e "\n${RED}>>> linux-$KERNEL_VERSION.tar.sign is invalid!${NC}"
     return 1
   fi
 }
@@ -73,28 +80,30 @@ verify_linux_signature() {
 download_extract_build_linux() {
   cd src/
 
-  if [ -f "linux-$KERNEL_VERSION.tar.xz" ]; then
+  if [ -f "linux-$KERNEL_VERSION.tar" ]; then
     if verify_linux_signature; then
       extract_build_linux
       return 0
     else
-      echo -e "${RED}!!! Signature verification failed: linux-${KERNEL_VERSION}.tar${NC}\n"
+      echo -e "\n${RED}!!! Signature verification failed: linux-${KERNEL_VERSION}.tar${NC}"
       return 1
     fi
   else
-    echo -e "${GREEN}>>> Downloading linux-$KERNEL_VERSION.tar.xz ...${NC}\n"
     if check_url $KERNEL_SRC_URL; then
-      echo -e "${GREEN}>>> linux-${KERNEL_VERSION}.tar.xz URL is valid.${NC}\n"
-      $DOWNLOADER -o src/linux-$KERNEL_VERSION.tar.xz $KERNEL_SRC_URL
+      echo -e "\n${GREEN}>>> linux-${KERNEL_VERSION}.tar.xz URL is valid.${NC}"
+
+      echo -e "\n${GREEN}>>> Downloading linux-$KERNEL_VERSION.tar.xz ...${NC}"
+      $DOWNLOADER -o linux-$KERNEL_VERSION.tar.xz $KERNEL_SRC_URL
+
       if verify_linux_signature; then
         extract_build_linux
         return 0
       else
-        echo -e "${RED}!!! Signature verification failed: linux-${KERNEL_VERSION}.tar${NC}\n"
+        echo -e "\n${RED}!!! Signature verification failed: linux-${KERNEL_VERSION}.tar${NC}"
         return 1
       fi
     else
-      echo -e "${RED}!!! linux-${KERNEL_VERSION}.tar.xz URL is not valid.${NC}\n"
+      echo -e "\n${RED}!!! linux-${KERNEL_VERSION}.tar.xz URL is not valid.${NC}"
       return 2
     fi
   fi
