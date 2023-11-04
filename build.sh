@@ -7,6 +7,7 @@
 #     gnupg2
 #   Linux:
 #     bc
+#     openssl-devel
 
 # Define colors using ANSI escape codes
 RED='\033[0;31m'
@@ -42,13 +43,20 @@ check_url() {
 }
 
 extract_build_linux() {
+  # To reduce compile time during linux compilation:
+  # - only use features/modules that your system really need. disable all other modules/features.
+  #
+  # To reduce cpu usage during linux compilation:
+  # - Use Fewer Cores by specifying less cores(-j). maybe half of your cores are enough.
+  # - Use ccache: This way, repeated compilations only need to compile changed portions, reducing overall CPU usage
+  # - Nice and Ionice: Prioritize the process using nice and ionice commands. nice adjusts the process priority, and ionice assigns I/O priority. For example, you could use nice -n 19 make -j4 to lower the priority of the compilation.
   echo -e "\n${GREEN}>>> Extracting linux-$KERNEL_VERSION.tar.xz into src/ ...${NC}"
   tar -xvf linux-$KERNEL_VERSION.tar -C .
 
   echo -e "\n${GREEN}>>> Building linux-$KERNEL_VERSION ...${NC}"
   cd linux-$KERNEL_VERSION 
     make defconfig
-    make -j12 && echo -e "\n${GREEN}>>> linux-${KERNEL_VERSION} successfully built.${NC}" || echo -e "\n${RED}!!! linux-${KERNEL_VERSION} make failed!${NC}" && exit
+    time make -j4 && echo -e "\n${GREEN}>>> linux-${KERNEL_VERSION} successfully built.${NC}" || echo -e "\n${RED}!!! linux-${KERNEL_VERSION} make failed!${NC}" && exit
   cd ..
 }
 
@@ -131,8 +139,11 @@ download_extract_build_busybox() {
 }
 
 build_src_output_dir
-download_extract_build_linux
+#download_extract_build_linux
+download_extract_build_busybox
 
 #if download_extract_build_kernel; then
 #  download_extract_build_busybox
 #fi
+
+#arch/x86/boot/bzImage
