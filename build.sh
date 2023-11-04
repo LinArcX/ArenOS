@@ -38,33 +38,18 @@ check_url() {
   fi
 }
 
-extract_build_kernel() {
+extract_build_linux() {
   echo -e "${GREEN}>>> Extracting linux-$KERNEL_VERSION.tar.xz into src/ ...${NC}\n"
   tar -xvf src/linux-$KERNEL_VERSION.tar -C ./src
 
   echo -e "${GREEN}>>> Building linux-$KERNEL_VERSION ...${NC}\n"
-  cd src/linux-$KERNEL_VERSION 
+  cd linux-$KERNEL_VERSION 
     make defconfig
     make -j12 && echo "${GREEN}>>> linux-${KERNEL_VERSION} successfully built.${NC}\n" || echo "${RED}!!! linux-${KERNEL_VERSION} make failed!${NC}\n" && exit
-  cd ../..
+  cd ..
 }
 
-download_extract_build_kernel() {
-  if [ -f "$FILE" ]; then
-      echo "File exists."
-  else
-    echo -e "${GREEN}>>> Downloading linux-$KERNEL_VERSION.tar.xz ...${NC}\n"
-    if check_url $KERNEL_SRC_URL; then
-      echo -e "${GREEN}>>> linux-${KERNEL_VERSION}.tar.xz URL is valid.${NC}\n"
-      $DOWNLOADER -o src/linux-$KERNEL_VERSION.tar.xz $KERNEL_SRC_URL
-      return 1
-    else
-      echo -e "${RED}!!! linux-${KERNEL_VERSION}.tar.xz URL is not valid.${NC}\n"
-      return 2
-    fi
-  fi
-
-
+verify_linux_signature() {
   echo -e "${GREEN}>>> Import keys belonging to Linus Torvalds and Greg Kroah-Hartman.(Linux developers)${NC}\n"
   gpg2 --locate-keys torvalds@kernel.org gregkh@kernel.org
 
@@ -72,20 +57,49 @@ download_extract_build_kernel() {
   gpg2 --tofu-policy good 38DBBDC86092693E
 
   echo -e "${GREEN}>>> Verifing signature ...${NC}\n"
-  cd src/
   $DOWNLOADER -O linux-$KERNEL_VERSION.tar.sign $KERNEL_SIG_URL
   unxz linux-$KERNEL_VERSION.tar.xz
   gpg2 --trust-model tofu linux-$KERNEL_VERSION.tar.sign linux-$KERNEL_VERSION.tar
-  cd ..
 
   if [ $? -eq 0 ]; then
     echo -e "${GREEN}>>> linux-$KERNEL_VERSION.tar.sign is valid.${NC}\n"
-    extract_build_kernel
     return 0
   else
     echo -e "${RED}>>> linux-$KERNEL_VERSION.tar.sign is invalid!${NC}\n"
-
+    return 1
   fi
+}
+
+download_extract_build_linux() {
+  cd src/
+
+  if [ -f "linux-$KERNEL_VERSION.tar.xz" ]; then
+    if verify_linux_signature; then
+      extract_build_linux
+      return 0
+    else
+      echo -e "${RED}!!! Signature verification failed: linux-${KERNEL_VERSION}.tar${NC}\n"
+      return 1
+    fi
+  else
+    echo -e "${GREEN}>>> Downloading linux-$KERNEL_VERSION.tar.xz ...${NC}\n"
+    if check_url $KERNEL_SRC_URL; then
+      echo -e "${GREEN}>>> linux-${KERNEL_VERSION}.tar.xz URL is valid.${NC}\n"
+      $DOWNLOADER -o src/linux-$KERNEL_VERSION.tar.xz $KERNEL_SRC_URL
+      if verify_linux_signature; then
+        extract_build_linux
+        return 0
+      else
+        echo -e "${RED}!!! Signature verification failed: linux-${KERNEL_VERSION}.tar${NC}\n"
+        return 1
+      fi
+    else
+      echo -e "${RED}!!! linux-${KERNEL_VERSION}.tar.xz URL is not valid.${NC}\n"
+      return 2
+    fi
+  fi
+
+  cd ..
 }
 
 download_extract_build_busybox() {
@@ -97,9 +111,9 @@ download_extract_build_busybox() {
     tar -xjf src/busybox-$BUSYBOX_VERSION.tar.bz2 -C ./src
 
     echo -e "${GREEN}>>> Building busybox-$BUSYBOX_VERSION ...${NC}\n"
-    cd src/busybox-$BUSYBOX_VERSION
+    cd busybox-$BUSYBOX_VERSION
 
-    cd ../..
+    cd ..
     return 0
   else
     echo -e "${RED}!!! BusyBox URL is not valid.${NC}\n"
@@ -108,7 +122,7 @@ download_extract_build_busybox() {
 }
 
 build_src_output_dir
-download_extract_build_kernel
+download_extract_build_linux
 
 #if download_extract_build_kernel; then
 #  download_extract_build_busybox
