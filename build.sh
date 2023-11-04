@@ -186,11 +186,9 @@ download_extract_build_busybox() {
 }
 
 build_src_output_dir
-#download_extract_build_linux
-download_extract_build_busybox
 
-#if download_extract_build_kernel; then
+#if download_extract_build_linux; then
 #  download_extract_build_busybox
+#
+#  arch/x86/boot/bzImage
 #fi
-
-#arch/x86/boot/bzImage
