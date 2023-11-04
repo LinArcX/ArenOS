@@ -128,7 +128,8 @@ extract_build_busybox() {
   echo -e "\n${GREEN}>>> Building busybox-$BUSYBOX_VERSION ...${NC}"
   cd busybox-$BUSYBOX_VERSION
     make defconfig
-    #time make -j"$(($(nproc) / 2))" && echo -e "\n${GREEN}>>> busybox-$BUSYBOX_VERSION successfully built.${NC}" || echo -e "\n${RED}!!! busybox-$BUSYBOX_VERSION build failed!${NC}" && exit
+    sed 's/# CONFIG_STATIC is not set/CONFIG_STATIC=y/g' -i .config
+    time make -j"$(($(nproc) / 2))" && echo -e "\n${GREEN}>>> busybox-$BUSYBOX_VERSION successfully built.${NC}" || echo -e "\n${RED}!!! busybox-$BUSYBOX_VERSION build failed!${NC}" && exit
   cd ..
   return 0
 }
