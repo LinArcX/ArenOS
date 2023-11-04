@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Requirements:
-# - bash
-# - curl
+#   bash
+#   curl
+#   gnupg2
 
 # Define colors using ANSI escape codes
 RED='\033[0;31m'
@@ -39,7 +40,7 @@ check_url() {
 
 extract_build_kernel() {
   echo -e "${GREEN}>>> Extracting linux-$KERNEL_VERSION.tar.xz into src/ ...${NC}\n"
-  tar -xJf src/linux-$KERNEL_VERSION.tar.xz -C ./src
+  tar -xvf src/linux-$KERNEL_VERSION.tar -C ./src
 
   echo -e "${GREEN}>>> Building linux-$KERNEL_VERSION ...${NC}\n"
   cd src/linux-$KERNEL_VERSION 
@@ -49,24 +50,41 @@ extract_build_kernel() {
 }
 
 download_extract_build_kernel() {
-  $DOWNLOADER -O src/linux-$KERNEL_VERSION.tar.sign $KERNEL_SIG_URL
-  gpg --verify src/linux-$KERNEL_VERSION.tar.sign src/linux-$KERNEL_VERSION.tar.xz
+  if [ -f "$FILE" ]; then
+      echo "File exists."
+  else
+    echo -e "${GREEN}>>> Downloading linux-$KERNEL_VERSION.tar.xz ...${NC}\n"
+    if check_url $KERNEL_SRC_URL; then
+      echo -e "${GREEN}>>> linux-${KERNEL_VERSION}.tar.xz URL is valid.${NC}\n"
+      $DOWNLOADER -o src/linux-$KERNEL_VERSION.tar.xz $KERNEL_SRC_URL
+      return 1
+    else
+      echo -e "${RED}!!! linux-${KERNEL_VERSION}.tar.xz URL is not valid.${NC}\n"
+      return 2
+    fi
+  fi
+
+
+  echo -e "${GREEN}>>> Import keys belonging to Linus Torvalds and Greg Kroah-Hartman.(Linux developers)${NC}\n"
+  gpg2 --locate-keys torvalds@kernel.org gregkh@kernel.org
+
+  echo -e "${GREEN}>>> Trust keys belonging Greg Kroah-Hartman.(Linux developer)${NC}\n"
+  gpg2 --tofu-policy good 38DBBDC86092693E
+
+  echo -e "${GREEN}>>> Verifing signature ...${NC}\n"
+  cd src/
+  $DOWNLOADER -O linux-$KERNEL_VERSION.tar.sign $KERNEL_SIG_URL
+  unxz linux-$KERNEL_VERSION.tar.xz
+  gpg2 --trust-model tofu linux-$KERNEL_VERSION.tar.sign linux-$KERNEL_VERSION.tar
+  cd ..
 
   if [ $? -eq 0 ]; then
     echo -e "${GREEN}>>> linux-$KERNEL_VERSION.tar.sign is valid.${NC}\n"
     extract_build_kernel
+    return 0
   else
     echo -e "${RED}>>> linux-$KERNEL_VERSION.tar.sign is invalid!${NC}\n"
-    echo -e "${GREEN}>>> Downloading linux-$KERNEL_VERSION.tar.xz ...${NC}\n"
- 
-    if check_url $KERNEL_SRC_URL; then
-      echo -e "${GREEN}>>> linux-${KERNEL_VERSION}.tar.xz URL is valid.${NC}\n"
-      $DOWNLOADER -o src/linux-$KERNEL_VERSION.tar.xz $KERNEL_SRC_URL
-      return 0
-    else
-      echo -e "${RED}!!! linux-${KERNEL_VERSION}.tar.xz URL is not valid.${NC}\n"
-      return 1
-    fi
+
   fi
 }
 
