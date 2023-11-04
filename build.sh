@@ -2,7 +2,7 @@
 
 # Requirements:
 # - bash
-# - wget
+# - curl
 
 # Define colors using ANSI escape codes
 RED='\033[0;31m'
@@ -36,10 +36,13 @@ build_src_output_dir() {
   mkdir -p output
 }
 
-download_build_kernel() {
+download_extract_build_kernel() {
   if check_url $KERNEL_URL; then
     echo -e "${GREEN}>>> Kernel URL is valid.${NC}\n"
     curl -o src/linux-$KERNEL_VERSION.tar.xz $KERNEL_URL
+
+    echo -e "${GREEN}>>> Extracting linux-$KERNEL_VERSION.tar.xz into src/ ...${NC}\n"
+    tar -xJf src/linux-$KERNEL_VERSION.tar.xz -C ./src
     return 0
   else
     echo -e "${RED}!!! Kernel URL is not valid.${NC}\n"
@@ -47,10 +50,13 @@ download_build_kernel() {
   fi
 }
 
-download_build_busybox() {
+download_extract_build_busybox() {
   if check_url $BUSYBOX_URL; then
     echo -e "${GREEN}>>> BuysBox URL is valid.${NC}\n"
     curl -o src/busybox-$BUSYBOX_VERSION.tar.bz2 $BUSYBOX_URL
+
+    echo -e "${GREEN}>>> Extracting busybox-$BUSYBOX_VERSION.tar.bz2 into src/ ...${NC}\n"
+    tar -xjf src/busybox-$BUSYBOX_VERSION.tar.bz2 -C ./src
     return 0
   else
     echo -e "${RED}!!! BusyBox URL is not valid.${NC}\n"
@@ -59,6 +65,7 @@ download_build_busybox() {
 }
 
 build_src_output_dir
-if download_build_kernel; then
-  download_build_busybox
+
+if download_extract_build_kernel; then
+  download_extract_build_busybox
 fi
