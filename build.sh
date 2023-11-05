@@ -187,19 +187,19 @@ download_extract_build_busybox() {
 
 create_distro() {
   cd output/
-
-  cp ../src/linux-$LINUX_VERSION/arch/x86_64/boot/bzImage ./
-  mkdir -p initrd
+    cp ../src/linux-$LINUX_VERSION/arch/x86_64/boot/bzImage ./
+    mkdir -p initrd
     cd initrd
-
-    echo -e "\n${GREEN}>>> Setup initrd ...${NC}"
-    mkdir -p bin boot dev etc home mnt opt proc sys tmp var
+      echo -e "\n${GREEN}>>> Setup initrd ...${NC}"
+      mkdir -p apps bin kernel dev home mnt proc sys tmp
       cd bin
+        cp ../../../src/busybox-$BUSYBOX_VERSION/busybox ./
+        for prog in $(./busybox --list); do
+          ln -s ./busybox ./$prog
+        done
 
-      cp ../../../src/busybox-$BUSYBOX_VERSION/busybox ./
-      for prog in $(./busybox --list); do
-        ln -s ./busybox ./$prog
-      done
+        cp ../../../scripts/keep_latest_shell.sh ./
+        chmod +x keep_latest_shell.sh
       cd ..
 
       # To see the available file system types supported by the mount: cat /proc/filesystems
@@ -211,16 +211,12 @@ create_distro() {
       echo 'mount -t tmpfs none /tmp' >> init
       echo 'sysctl -w kernel.printk="0 0 0 0"' >> init
 
-      # Ensure terminal setup: Create /dev/console and /dev/tty
-      #echo 'mknod -m 622 /dev/console c 5 1' >> init
-      #echo 'mknod -m 666 /dev/tty c 5 0' >> init
-      #echo '/bin/sh +m' >> init
-      
-      echo 'mknod /dev/ttyS0 c 4 64' >> init
-      echo 'setsid sh -c "exec sh </dev/ttyS0 >/dev/ttyS0 2>&1"' >> init
+      # run the shell on a normal tty(tty1) instead of running it on: /dev/console.
+      echo "setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'" >> init
+      echo "/bin/keep_latest_shell.sh" >> init
 
       chmod -R 777 .
-      chmod +x init  # Make the init script executable
+      chmod +x init
       find . | cpio -o -H newc > ../initrd.img
     cd ..
   cd ..
@@ -244,3 +240,12 @@ lunch_qemu
 #
 #  arch/x86/boot/bzImage
 #fi
+
+
+# Garbage
+# Ensure terminal setup: Create /dev/console and /dev/tty
+#echo 'mknod -m 622 /dev/console c 5 1' >> init
+#echo 'mknod -m 666 /dev/tty c 5 0' >> init
+#echo '/bin/sh +m' >> init
+#echo 'setsid sh -c "exec sh </dev/tty1 >/dev/tty1 2>&1"' >> init
+#echo 'mknod -m 666 /dev/tty0 c 5 0' >> init
