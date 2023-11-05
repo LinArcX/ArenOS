@@ -198,14 +198,17 @@ create_distro() {
           ln -s ./busybox ./$prog
         done
 
-        #cp ../../../scripts/init.sh ./
-        #chmod +x init.sh
-  
-        #cp ../../../scripts/login.sh ./
-        #chmod +x login.sh
-
+        #rm sh
+        #echo "#!/bin/sh" > sh
+        #echo 'setsid sh -c "exec sh </dev/tty1 >/dev/tty1 2>&1"' >> sh
+        #chmod +x ./sh
+ 
         cp ./init ../
 
+      cd ..
+
+      cd proc
+        echo 'console=ttyS0' > cmdline
       cd ..
 
       host="ArenOs"
@@ -215,26 +218,8 @@ create_distro() {
       echo "::1			localhost.localdomain	localhost ip6-localhost" >> etc/hosts
 
       echo -e "\n${GREEN}>>> Generating /etc/init.d/rcS ...${NC}"
-      cp ../../src/busybox-$BUSYBOX_VERSION/examples/inittab ./etc/
-      mkdir -p etc/init.d
-      cd etc/init.d/
-        echo "#!/bin/sh" > rcS
-        ## To see the available file system types supported by the mount: cat /proc/filesystems
-        echo 'mount -t sysfs sysfs /sys' >> rcS
-        echo 'mount -t proc proc /proc' >> rcS
-        echo 'mount -t devtmpfs udev /dev' >> rcS
-        echo 'mount -t tmpfs none /tmp' >> rcS
-        echo 'sysctl -w kernel.printk="0 0 0 0"' >> rcS
-        echo "/bin/login" >> rcS
-        
-        #echo "/bin/init" >> init
-        ##echo "setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'" >> init
-        ##echo 'mknod -m 622 /dev/console c 5 1' >> init
-        ##echo 'mknod -m 666 /dev/tty c 5 0' >> init
-        ##echo "/bin/init.sh" >> init
-        ### run the shell on a normal tty(tty1) instead of running it on: /dev/console.
-      cd ../..
- 
+      cp ../../scripts/inittab ./etc/
+      #sed 's|::askfirst:-/bin/sh|ttyS0::askfirst:/bin/sh|g' -i ./etc/inittab
 
       echo "root:x:0:" > etc/group
       echo "bin:x:1:" >> etc/group
@@ -253,13 +238,25 @@ create_distro() {
       echo "users:x:100:" >> etc/group
 
       echo "root:x:0:0:root:/root:/bin/sh" > etc/passwd
+      # ArenOs uses root:toor as username/password. to generate a hash for this algorithm:
+      # openssl passwd <PUT_YOUR_PASSWORD_HERE> or openssl passwd -6 -salt <PUT_YOUR_SALT_HERE> 
+      echo 'root:$1$y7CpAy10$UGCFAmM3cGMYyEu51.5c6/:17743::::::' > etc/shadow
 
-      # ArenOs uses SHA-512 encryption algorithms. to generate a hash for this algorithm:
-      # echo -n "toor" | openssl dgst -sha512
-      #echo "root:2b64f2e3f9fee1942af9ff60d40aa5a719db33b8ba8dd4864bb4f11e25ca2bee00907de32a59429602336cac832c8f2eeff5177cc14c864dd116c8bf6ca5d9a9:17743:18635:0:99999:7:::" > etc/shadow
-      echo "root:mKhhqXFCdhNiA:17743::::::" > etc/shadow
+      mkdir -p etc/init.d
+      cd etc/init.d/
+        echo "#!/bin/sh" > rcS
+        echo 'mknod dev/console c 5 1' >> rcS
+        echo 'mknod dev/tty c 5 0' >> rcS
 
-     
+        # To see the available file system types supported by the mount: cat /proc/filesystems
+        echo 'mount -t sysfs sysfs /sys' >> rcS
+        echo 'mount -t proc proc /proc' >> rcS
+        echo 'mount -t devtmpfs udev /dev' >> rcS
+        echo 'mount -t tmpfs none /tmp' >> rcS
+        echo 'sysctl -w kernel.printk="0 0 0 0"' >> rcS
+        echo "/bin/login" >> rcS
+      cd ../..
+
       chmod -R 777 .
       chmod +x init
       find . | cpio -o -H newc > ../initrd.img
@@ -287,6 +284,13 @@ lunch_qemu
 #fi
 
 
+
+
+
+
+
+
+
 # Garbage
 # Ensure terminal setup: Create /dev/console and /dev/tty
 #echo 'mknod -m 622 /dev/console c 5 1' >> init
@@ -294,3 +298,23 @@ lunch_qemu
 #echo '/bin/sh +m' >> init
 #echo 'setsid sh -c "exec sh </dev/tty1 >/dev/tty1 2>&1"' >> init
 #echo 'mknod -m 666 /dev/tty0 c 5 0' >> init
+#
+#        #cp ../../../scripts/init.sh ./
+        #chmod +x init.sh
+  
+        #cp ../../../scripts/login.sh ./
+        #chmod +x login.sh
+
+
+
+        #echo 'setsid cttyhack sh' >> rcS
+        #echo 'cd /dev' >> rcS
+        #echo 'rm -f /dev/console' >> rcS
+        #echo 'ln -s /dev/ttyS0 /dev/console' >> rcS
+
+        #echo "/bin/init" >> init
+        ##echo "setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'" >> init
+        ##echo 'mknod -m 622 /dev/console c 5 1' >> init
+        ##echo 'mknod -m 666 /dev/tty c 5 0' >> init
+        ##echo "/bin/init.sh" >> init
+        ### run the shell on a normal tty(tty1) instead of running it on: /dev/console.
