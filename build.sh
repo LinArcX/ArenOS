@@ -185,7 +185,40 @@ download_extract_build_busybox() {
   cd ..
 }
 
+create_distro() {
+  cd output/
+
+  cp ../src/linux-$LINUX_VERSION/arch/x86_64/boot/bzImage ./
+  mkdir -p initrd
+    cd initrd
+
+    echo -e "\n${GREEN}>>> Setup initrd ...${NC}"
+    mkdir -p bin dev proc sys
+      cd bin
+
+      cp ../../../src/busybox-$BUSYBOX_VERSION/busybox ./
+      for prog in $(./busybox --list); do
+        ln -s ./busybox ./$prog
+      done
+      cd ..
+    cd ..
+
+    echo -e "\n${GREEN}>>> Generating initrd.img ...${NC}"
+    echo '#!/bin/sh' > init
+    echo 'mount -t sysfs sysfs /sys' >> init
+    echo 'mount -t proc proc /proc' >> init
+    echo 'mount -t devtmpfs udev /dev' >> init
+    echo 'sysctl -w kernel.printk="2 4 1 7"' >> init
+    echo '/bin/sh' >> init
+
+    chmod -R 777 .
+    find . | cpio -o -H newc > initrd.img
+ 
+  cd ..
+}
+
 build_src_output_dir
+create_distro
 
 #if download_extract_build_linux; then
 #  download_extract_build_busybox
