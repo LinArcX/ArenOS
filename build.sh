@@ -191,7 +191,7 @@ create_distro() {
     mkdir -p initrd
     cd initrd
       echo -e "\n${GREEN}>>> Setup initrd ...${NC}"
-      mkdir -p apps bin kernel dev home mnt proc sys tmp
+      mkdir -p apps bin etc kernel dev home mnt proc root sys tmp
       cd bin
         cp ../../../src/busybox-$BUSYBOX_VERSION/busybox ./
         for prog in $(./busybox --list); do
@@ -204,6 +204,34 @@ create_distro() {
         cp ../../../scripts/login.sh ./
         chmod +x login.sh
       cd ..
+
+      host="ArenOs"
+      echo $host > etc/hostname
+      echo "/bin/sh" > etc/shells
+      echo "127.0.0.1		localhost.localdomain	localhost" > etc/hosts
+      echo "::1			localhost.localdomain	localhost ip6-localhost" >> etc/hosts
+
+      echo "root:x:0:" > etc/group
+      echo "bin:x:1:" >> etc/group
+      echo "sys:x:2:" >> etc/group
+      echo "wheel:x:4:" >> etc/group
+      echo "daemon:x:7:" >> etc/group
+      echo "disk:x:9:" >> etc/group
+      echo "audio:x:12:" >> etc/group
+      echo "video:x:13:" >> etc/group
+      echo "mail:x:18:" >> etc/group
+      echo "storage:x:19:" >> etc/group
+      echo "scanner:x:20:" >> etc/group
+      echo "network:x:21:" >> etc/group
+      echo "input:x:25:" >> etc/group
+      echo "nogroup:x:99:" >> etc/group
+      echo "users:x:100:" >> etc/group
+
+      echo "root:x:0:0:root:/root:/bin/sh" > etc/passwd
+
+      # ArenOs uses SHA-512 encryption algorithms. to generate a hash for this algorithm:
+      # echo -n "toor" | openssl dgst -sha512
+      echo "root:2b64f2e3f9fee1942af9ff60d40aa5a719db33b8ba8dd4864bb4f11e25ca2bee00907de32a59429602336cac832c8f2eeff5177cc14c864dd116c8bf6ca5d9a9:17743:18635:0:99999:7:::" > etc/shadow
 
       # To see the available file system types supported by the mount: cat /proc/filesystems
       echo -e "\n${GREEN}>>> Generating initrd.img ...${NC}"

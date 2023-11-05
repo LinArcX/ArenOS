@@ -8,7 +8,13 @@ while true; do
 
   if [ "$username" = "root" ] && [ "$password" = "toor" ]; then
     echo "Welcome, $username!"
-    /bin/init.sh
+    setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
+
+    initsh_count=$(ps | awk '{print $4}' | grep '^init.sh$' | wc -l)
+    if [ $initsh_count -eq 0 ]; then
+      /bin/init.sh
+    fi
+ 
     break
   else
     echo "Login incorrect"

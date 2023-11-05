@@ -1,8 +1,7 @@
 #!/bin/sh
 
 # run the shell on a normal tty(tty1) instead of running it on: /dev/console.
-setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
-shell_count=$(ps | awk '{print $4}' | grep '^sh$' | wc -l)
+shell_count=$(ps | awk '{print $4}' | grep 'login.sh$' | wc -l)
 
 #echo $shell_count
 #shell_count=$(ps | grep '/bin/init.sh$' | wc -l)
