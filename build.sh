@@ -198,8 +198,11 @@ create_distro() {
           ln -s ./busybox ./$prog
         done
 
-        cp ../../../scripts/keep_latest_shell.sh ./
-        chmod +x keep_latest_shell.sh
+        cp ../../../scripts/init.sh ./
+        chmod +x init.sh
+  
+        cp ../../../scripts/login.sh ./
+        chmod +x login.sh
       cd ..
 
       # To see the available file system types supported by the mount: cat /proc/filesystems
@@ -210,10 +213,20 @@ create_distro() {
       echo 'mount -t devtmpfs udev /dev' >> init
       echo 'mount -t tmpfs none /tmp' >> init
       echo 'sysctl -w kernel.printk="0 0 0 0"' >> init
+      echo "/bin/init.sh" >> init
 
-      # run the shell on a normal tty(tty1) instead of running it on: /dev/console.
-      echo "setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'" >> init
-      echo "/bin/keep_latest_shell.sh" >> init
+      ## run the shell on a normal tty(tty1) instead of running it on: /dev/console.
+      #echo "setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'" >> init
+
+      #echo "echo -n 'User:'" >> init
+      #echo "read username" >> init
+      #echo "echo -n 'Password:'" >> init
+      #echo "read -s password" >> init
+
+      #echo "while true; do" >> init
+      #echo '  echo -e "\nShell exited. Please login."' >> init
+      #echo "  sh /init" >> init
+      #echo "done" >> init
 
       chmod -R 777 .
       chmod +x init
