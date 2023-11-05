@@ -191,14 +191,14 @@ create_distro() {
     mkdir -p initrd
     cd initrd
       echo -e "\n${GREEN}>>> Setup initrd ...${NC}"
-      mkdir -p apps bin etc kernel dev home mnt proc root sys tmp
+      mkdir -p apps bin etc kernel dev home mnt proc root sys sbin tmp
       cd bin
         cp ../../../src/busybox-$BUSYBOX_VERSION/busybox ./
         for prog in $(./busybox --list); do
           ln -s ./busybox ./$prog
         done
 
-        #rm sh
+       #rm sh
         #echo "#!/bin/sh" > sh
         #echo 'setsid sh -c "exec sh </dev/tty1 >/dev/tty1 2>&1"' >> sh
         #chmod +x ./sh
@@ -207,8 +207,14 @@ create_distro() {
 
       cd ..
 
+      cd sbin
+        ln -s ../bin/busybox ./init
+      cd ..
+ 
+
       cd proc
         echo 'console=ttyS0' > cmdline
+        echo 'init=/bin/init' >> cmdline
       cd ..
 
       host="ArenOs"
