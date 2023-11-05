@@ -193,7 +193,7 @@ create_distro() {
     cd initrd
 
     echo -e "\n${GREEN}>>> Setup initrd ...${NC}"
-    mkdir -p bin dev proc sys
+    mkdir -p bin boot dev etc home mnt opt proc sys tmp var
       cd bin
 
       cp ../../../src/busybox-$BUSYBOX_VERSION/busybox ./
@@ -201,32 +201,42 @@ create_distro() {
         ln -s ./busybox ./$prog
       done
       cd ..
+
+      # To see the available file system types supported by the mount: cat /proc/filesystems
+      echo -e "\n${GREEN}>>> Generating initrd.img ...${NC}"
+      echo '#!/bin/sh' > init
+      echo 'mount -t sysfs sysfs /sys' >> init
+      echo 'mount -t proc proc /proc' >> init
+      echo 'mount -t devtmpfs udev /dev' >> init
+      echo 'mount -t tmpfs none /tmp' >> init
+      echo 'sysctl -w kernel.printk="0 0 0 0"' >> init
+
+      # Ensure terminal setup: Create /dev/console and /dev/tty
+      #echo 'mknod -m 622 /dev/console c 5 1' >> init
+      #echo 'mknod -m 666 /dev/tty c 5 0' >> init
+      #echo '/bin/sh +m' >> init
+      
+      echo 'mknod /dev/ttyS0 c 4 64' >> init
+      echo 'setsid sh -c "exec sh </dev/ttyS0 >/dev/ttyS0 2>&1"' >> init
+
+      chmod -R 777 .
+      chmod +x init  # Make the init script executable
+      find . | cpio -o -H newc > ../initrd.img
     cd ..
-
-    echo -e "\n${GREEN}>>> Generating initrd.img ...${NC}"
-    echo '#!/bin/sh' > init
-    echo 'mount -t sysfs sysfs /sys' >> init
-    echo 'mount -t proc proc /proc' >> init
-    echo 'mount -t devtmpfs udev /dev' >> init
-    echo 'sysctl -w kernel.printk="2 4 1 7"' >> init
-    echo '/bin/init' >> init
-
-    chmod -R 777 .
-    find . | cpio -o -H newc > initrd.img
- 
   cd ..
 }
 
 lunch_qemu() {
   cd output/
 
+  echo -e "\n${GREEN}>>> Lunching in qemu ...${NC}"
   qemu-system-x86_64 -kernel bzImage -initrd initrd.img
 
   cd ..
 }
 
 build_src_output_dir
-#create_distro
+create_distro
 lunch_qemu
 
 #if download_extract_build_linux; then
