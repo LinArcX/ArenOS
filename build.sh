@@ -185,7 +185,37 @@ download_extract_build_busybox() {
   cd ..
 }
 
+download_extract_build_sbase() {
+  cd src/
+
+  if [ -d "sbase" ]; then
+    cd sbase
+
+    git pull
+
+    cd ..
+  else
+    echo -e "\n${GREEN}>>> Cloning sbase ...${NC}"
+    git clone git://git.suckless.org/sbase
+    cd sbase
+
+    git pull
+
+    cd ..
+    #echo -e "\n${RED}!!! BusyBox URL is not valid.${NC}"
+  fi
+
+  cd ..
+}
+
 create_distro() {
+  # issues:
+  # busybox + it's init is bullshit! it's better to replace:
+  # busybox with sbase + ubase
+  # busybox's init with sinit
+  # glibc with musl
+  # gcc with scc/tcc
+  # openssl with monocypher
   cd output/
     cp ../src/linux-$LINUX_VERSION/arch/x86_64/boot/bzImage ./
     mkdir -p initrd
@@ -280,47 +310,13 @@ lunch_qemu() {
 }
 
 build_src_output_dir
-create_distro
-lunch_qemu
+download_extract_build_sbase
+#download_extract_build_busybox
+#create_distro
+#lunch_qemu
 
 #if download_extract_build_linux; then
 #  download_extract_build_busybox
 #
 #  arch/x86/boot/bzImage
 #fi
-
-
-
-
-
-
-
-
-
-# Garbage
-# Ensure terminal setup: Create /dev/console and /dev/tty
-#echo 'mknod -m 622 /dev/console c 5 1' >> init
-#echo 'mknod -m 666 /dev/tty c 5 0' >> init
-#echo '/bin/sh +m' >> init
-#echo 'setsid sh -c "exec sh </dev/tty1 >/dev/tty1 2>&1"' >> init
-#echo 'mknod -m 666 /dev/tty0 c 5 0' >> init
-#
-#        #cp ../../../scripts/init.sh ./
-        #chmod +x init.sh
-  
-        #cp ../../../scripts/login.sh ./
-        #chmod +x login.sh
-
-
-
-        #echo 'setsid cttyhack sh' >> rcS
-        #echo 'cd /dev' >> rcS
-        #echo 'rm -f /dev/console' >> rcS
-        #echo 'ln -s /dev/ttyS0 /dev/console' >> rcS
-
-        #echo "/bin/init" >> init
-        ##echo "setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'" >> init
-        ##echo 'mknod -m 622 /dev/console c 5 1' >> init
-        ##echo 'mknod -m 666 /dev/tty c 5 0' >> init
-        ##echo "/bin/init.sh" >> init
-        ### run the shell on a normal tty(tty1) instead of running it on: /dev/console.
