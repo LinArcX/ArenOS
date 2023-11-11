@@ -1,0 +1,3 @@
+[submodule "src/Monocypher"]
+	path = src/Monocypher
+	url = https://github.com/LoupVaillant/Monocypher
