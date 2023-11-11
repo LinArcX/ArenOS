@@ -247,7 +247,7 @@ create_distro() {
         echo 'init=/bin/init' >> cmdline
       cd ..
 
-      host="ArenOs"
+      host="ArenOS"
       echo $host > etc/hostname
       echo "/bin/sh" > etc/shells
       echo "127.0.0.1		localhost.localdomain	localhost" > etc/hosts
@@ -274,7 +274,7 @@ create_distro() {
       echo "users:x:100:" >> etc/group
 
       echo "root:x:0:0:root:/root:/bin/sh" > etc/passwd
-      # ArenOs uses root:toor as username/password. to generate a hash for this algorithm:
+      # ArenOS uses root:toor as username/password. to generate a hash for this algorithm:
       # openssl passwd <PUT_YOUR_PASSWORD_HERE> or openssl passwd -6 -salt <PUT_YOUR_SALT_HERE> 
       echo 'root:$1$y7CpAy10$UGCFAmM3cGMYyEu51.5c6/:17743::::::' > etc/shadow
 

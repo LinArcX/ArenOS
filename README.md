@@ -1,4 +1,4 @@
-# ArenOs
+# ArenOS
 A minimal linux distribution based on suckless/openbsd/busybox ideas. it consists of:
 - us: user-space applications including:
   init, login, lastlog, cat, etc..
@@ -36,4 +36,4 @@ chmod +x build.sh
   1% uncertantity, you should not install that package on your machine. if you want to experiment with that, you can run it in a isolated(sandboxed) environment.
 
 ## License
-![License](https://img.shields.io/github/license/LinArcX/ArenOs.svg?style=flat-square)
+![License](https://img.shields.io/github/license/LinArcX/ArenOS.svg?style=flat-square)
