@@ -1,0 +1,32 @@
+Package manager are evil. you may ask:
+> why? They make our life easier!
+
+There are some reasons for that:
+- Abstractions are not evil. But they are not Agnels also!
+- You need a bare minimum level of abstractions in the computer.
+- By adding more abstractions, you will be more far away from the reallity.
+- You should be very careful to adding layers of abstractions to your system.
+- KISS and minimalism makes your life easier by removing extra abstractions.
+
+- The best system is the system:
+  - With less abstractions.
+  - That you understand it very well.
+    - if you understand a system very well, you can customize/change it better.
+  - That give you the highest level of control.
+
+- Package managers add more abstractions.
+  - This abstractions encourages you to be carefree(and lazy after a while) and trust more easily. (since someone else made a repo with tons of ready-to-use package. i need to just run: `sudo apt install evil`)
+
+Q: What will happen if i don't use a package manager?
+A: Since there is no central place for grabbing package(repositories) or there is no package manger to use:
+  - You will just add the packages that you `truly` need. (because it's costly and time consuming)
+    - in this way, it's harder to make your system bloat(or: it's easier to keep your system lean/fast/understandable.)
+  - You will force to think more carefully.
+  - You need to to write your own scripts to automate your digital life as you wish.
+    - You have full control/understanding on your scripts.
+  - You need to visit real software websites and read their docs how to compile/use their applications.
+    - In the long run, you will understand your packages better.
+
+The idea behind ArenOS is to give you the opportunity to have maximum control over your system. 
+Instead of someone else creating repository of packages, you can do all the steps by yourself.
+For sure you can still automate this process by writing your own scripts.

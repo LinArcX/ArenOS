@@ -1,1 +1,2 @@
 - [] exit is part of the shell, so you need ro rerun the login program when you get out of your shell.
+- [] implment `sid` software to make applications run in sandbox environment.
