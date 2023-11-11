@@ -1,9 +1,16 @@
 # ArenOs
-A minimal os based on suckless/openbsd/busybox ideas. it made with scc and musl and consists of:
+A minimal linux distribution based on suckless/openbsd/busybox ideas. it consists of:
 - us: user-space applications including:
   init, login, lastlog, cat, etc..
 - ks: linux kernel.
 - cryptography: monocypher.
+
+# How to build?
+You can use `scc` as the c compiler and `musl` as c lib. there is a `build.sh` in the root of the project. just:
+```
+chmod +x build.sh
+./build.sh
+```
 
 # Design decisions
 - There is just one user. yes you are the ROOT! (no need for sudo, useradd, userdel, usermod, etc..)
