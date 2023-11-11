@@ -1,3 +1,6 @@
 [submodule "cryptography/Monocypher"]
 	path = cryptography/Monocypher
 	url = https://github.com/LoupVaillant/Monocypher
+[submodule "linux"]
+	path = linux
+	url = https://github.com/torvalds/linux
