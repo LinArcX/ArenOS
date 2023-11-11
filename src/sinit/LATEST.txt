@@ -1,2 +1,0 @@
-based on commit: 28c44b6b94a870f2942c37f9cfbae8b770595712 on 2018-03-26
-  https://git.suckless.org/sinit/commit/28c44b6b94a870f2942c37f9cfbae8b770595712.html

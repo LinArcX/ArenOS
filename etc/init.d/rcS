@@ -1,9 +1,0 @@
-#!/bin/sh
-mknod dev/console c 5 1
-mknod dev/tty c 5 0
-mount -t sysfs sysfs /sys
-mount -t proc proc /proc
-mount -t devtmpfs udev /dev
-mount -t tmpfs none /tmp
-sysctl -w kernel.printk="0 0 0 0"
-/bin/login
