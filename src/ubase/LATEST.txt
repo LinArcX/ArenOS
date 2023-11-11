@@ -1,2 +1,0 @@
-based on commit: a015607af0075badc0cd90523c43f391daa0572d - 2023-09-22 08:06
-  https://git.suckless.org/ubase/commit/a015607af0075badc0cd90523c43f391daa0572d.html
