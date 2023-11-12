@@ -304,8 +304,8 @@ lunch_qemu() {
   cd output/
 
   echo -e "\n${GREEN}>>> Lunching in qemu ...${NC}"
-  qemu-system-x86_64 -kernel bzImage -initrd initrd.img
-
+  #qemu-system-x86_64 -kernel bzImage -initrd initrd.img
+  qemu-system-x86_64 -kernel bzImage -initrd initrd.img -append "init=/bin/init"
   cd ..
 }
 

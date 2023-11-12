@@ -37,6 +37,8 @@ static sigset_t set;
 int
 main(void)
 {
+  printf("\e[1;1H\e[2J");  
+
   int sig;
 	size_t i;
 
@@ -105,7 +107,6 @@ sigreap(void)
 		;
 	alarm(TIMEO);
 }
-
 static void
 sigreboot(void)
 {

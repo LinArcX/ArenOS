@@ -1,2 +1,9 @@
-- [] exit is part of the shell, so you need ro rerun the login program when you get out of your shell.
+- [DONE] exit is part of the shell, so you need ro rerun the login program when you get out of your shell.
+  I didn't touch the shell. in init, i can detect if any SIGCHLD raised, and i check if $SHLVL is less than/equal to 1, i will re-run the login program.
+- [] There should be two passwords in the system. 
+  - [] one for login to they system
+  - [] and another one for execution binaries in /bin and editing files in /etc, /dev.
+  - [] /proc should be readonly.
 - [] implment `sid` software to make applications run in sandbox environment.
+- [] all files in /bin are readonly.(no executable/no writable by default)
+  - if you like to execute them, you need to enter an

@@ -13,27 +13,39 @@ chmod +x build.sh
 ```
 
 # Design decisions
-- There is just one user. yes you are the ROOT! (no need for sudo, useradd, userdel, usermod, etc..)
-- There is no concept of permission. (You are the owner of your computer, why you need to request with sude every fucking time?)
-- Security concerns should handle by userspace applications/kernel.(not by creating permissions, groups.)
-  - For instance: `rm -rf /` is a security issue related to `rm` command. each application is responsible to create himself as safe and secure as possible.
-  - One of the consequences is that
-- There is no traditional file hierarchy. just these directories exists:
-  - /dev
-  - /info
-  - /mnt
-  - /pkgs
-  - /proc
-  - /sys
-  - /tmp
+- There is just one user. 
+  - So you won't find utilities like: useradd, userdel, usermod
+- There is no concept of groups.
+- You need two passwords: 1. login password. 2. `exed` password(execute/edit)
+  - with login password, you can just login to the system.
+  - but for executing binaries in `/bin` or editiing files in `/etc`, you need an `exed` password.
+    - Imagine a hackers can succesfully login to your system. so he can execute anything or edit any files. because of that, we added extra security layer.
+- Even with these security guards, some operations still should not be happen. like: `rm -rfd /`
+  - These problems should handle by user applications.(in this case rm should not allow users to delete /)
+  - By all these guards, still people can install random software that they don't know how they works. We strongly encourage you to just install the software that you read their source code and fully understand them.
+    - In this way, you are the protector of your system. not third-party companies, applications.
+- More compact FileSystem Hierarchy. ArenOS includes:
+  - /bin:  all binaries goes here.
+  - /boot: specific for kernel and any configuration related to it.
+  - /dev:  device files representing hardware devices, including terminals, disk drives, and others
+  - /etc:  configurations of the binaries in /bin resides here.
+  - /home: directory for keeping all personal stuff of the user.
+  - /mnt:  mount point for mounting file systems and removable media such as USB drives.
+  - /proc: virtual file system that provides information about processes and the kernel.
+  - /sys:  virtual file system exposing kernel and hardware information.
+  - /tmp:  directory for temporary files that are usually cleared on system reboot.(by default 1GB)
+  - /var:  variable files such as logs, spool files, and temporary files.(by default 2GB)
 
-- All applications(including kernel) will goes into /pkgs. there is no /bin, /sbin/, /run.
-  - Each application will responsible to maintains his own configurations inside. (so no need for /etc)
-  - There is no /lib directory. if you want to use a library, you should refer to it's package in /pkg.
+  There is no:
+  - /lib and /lib64: since all applications compiled statically. in this way, people forced to include source codes into their application and recompile them.
+  - /media: you can mount your removable media in /mnt.
+  - /opt: you can put your software in /home/software
+  - /root: you are the root and your home directory is home!
+  - /run: ?
+  - /sbin and /usr: /bin is enough.
+  - /srv: ?
 
-- There is no package manager.
-  - package managers makes easy to people to be lazy and install any kind of software without knowing how they works. ArenOS encourage you to first know exactly what is the software is doing. if you have
-  1% uncertantity, you should not install that package on your machine. if you want to experiment with that, you can run it in a isolated(sandboxed) environment.
+- There is no [package manager](./docs/PackageManagers.txt)
 
 ## License
 ![License](https://img.shields.io/github/license/LinArcX/ArenOS.svg?style=flat-square)
