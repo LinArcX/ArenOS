@@ -1,129 +1,94 @@
-/* See LICENSE file for copyright and license details. */
-#include <sys/ioctl.h>
-#include <sys/types.h>
-
-#include <errno.h>
-#include <grp.h>
-#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <unistd.h>
-#include <utmp.h>
+#include <termios.h>
+#include <unistd.h>   
 
-#include "passwd.h"
-#include "util.h"
+#define SIZE 100
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
-///* Write utmp entry */
-//static void
-//writeutmp(const char *user, const char *tty)
-//{
-//	struct utmp usr;
-//	FILE *fp;
-//
-//	memset(&usr, 0, sizeof(usr));
-//
-//	usr.ut_type = USER_PROCESS;
-//	usr.ut_pid = getpid();
-//	strlcpy(usr.ut_user, user, sizeof(usr.ut_user));
-//	strlcpy(usr.ut_line, tty, sizeof(usr.ut_line));
-//	usr.ut_tv.tv_sec = time(NULL);
-//
-//	fp = fopen(UTMP_PATH, "a");
-//	if (fp) {
-//		if (fwrite(&usr, sizeof(usr), 1, fp) != 1)
-//			if (ferror(fp))
-//				weprintf("%s: write error:", UTMP_PATH);
-//		fclose(fp);
-//	} else {
-//		weprintf("fopen %s:", UTMP_PATH);
-//	}
-//}
-
-static int
-dologin(struct passwd *pw, int preserve)
+void getPassword(char password[])
 {
-	char *shell = pw->pw_shell[0] == '\0' ? "/bin/sh" : pw->pw_shell;
+  static struct termios oldt, newt;
+  int i = 0;
+  int c;
 
-	if (preserve == 0)
-		clearenv();
-	setenv("HOME", pw->pw_dir, 1);
-	setenv("SHELL", shell, 1);
-	setenv("USER", pw->pw_name, 1);
-	setenv("LOGNAME", pw->pw_name, 1);
-	//setenv("PATH", ENV_PATH, 1);
-	if (chdir(pw->pw_dir) < 0)
-		eprintf("chdir %s:", pw->pw_dir);
-	execlp(shell, shell, "-l", NULL);
-	weprintf("execlp %s:", shell);
-	return (errno == ENOENT) ? 127 : 126;
-}
+  /*saving the old settings of STDIN_FILENO and copy settings for resetting*/
+  tcgetattr( STDIN_FILENO, &oldt);
+  newt = oldt;
 
-static void
-usage(void)
-{
-	eprintf("usage: %s [-p] username\n", argv0);
+  /*setting the approriate bit in the termios struct*/
+  newt.c_lflag &= ~(ECHO);          
+
+  /*setting the new bits*/
+  tcsetattr( STDIN_FILENO, TCSANOW, &newt);
+
+  /*reading the password from the console*/
+  while ((c = getchar())!= '\n' && c != EOF && i < SIZE){
+      password[i++] = c;
+  }
+  password[i] = '\0';
+
+  /*resetting our old STDIN_FILENO*/ 
+  tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
 }
 
 int
-main(int argc, char *argv[])
+main(void)
 {
-	struct passwd *pw;
-	char *pass, *user;
-	char *tty;
-	uid_t uid;
-	gid_t gid;
-	int pflag = 0;
+  char line[300];
+  FILE *file = fopen("/etc/shadow", "r");;
 
-	ARGBEGIN {
-	case 'p':
-		pflag = 1;
-		break;
-	default:
-		usage();
-	} ARGEND;
+  if (NULL == file)
+  {
+    perror("Error opening file for reading");
+    fclose(file);
+    return EXIT_FAILURE;
+  }
+  char password[SIZE];
+	char *shell = "/bin/sh";
 
-	if (argc < 1)
-		usage();
+ASK:
+  memset(password, 0, ARRAY_SIZE(password));
+  printf("password: ");
+  getPassword(password);
 
-	if (isatty(0) == 0 || isatty(1) == 0 || isatty(2) == 0)
-		eprintf("no tty");
+  if (fgets(line, sizeof(line), file) == NULL)
+  {
+    if (strcmp(line, password) == 0)
+    {
+      // run the shell
+	    execlp(shell, shell, "-l", NULL);
+    }
+    else
+    {
+      // re-ask for login info
+      goto ASK;
 
-	user = argv[0];
-	errno = 0;
-	pw = getpwnam(user);
-	if (!pw) {
-		if (errno)
-			eprintf("getpwnam %s:", user);
-		else
-			eprintf("who are you?\n");
-	}
+    }
+    return EXIT_SUCCESS;
+  }
+  else 
+  {
+    perror("Error reading line from file");
+    fclose(file);
+    return EXIT_FAILURE;
+  }
 
-	uid = pw->pw_uid;
-	gid = pw->pw_gid;
 
-	/* Flush pending input */
-	ioctl(0, TCFLSH, (void *)0);
+  //// Open the file for writing
+  //file = fopen("filename.txt", "a");  // "a" stands for append, use "w" to overwrite the file
 
-	pass = getpass("Password: ");
-	if (!pass)
-		eprintf("getpass:");
-	if (pw_check(pw, pass) <= 0)
-		exit(1);
+  //if (file == NULL) {
+  //    perror("Error opening file for writing");
+  //    return 1;
+  //}
 
-	tty = ttyname(0);
-	if (!tty)
-		eprintf("ttyname:");
+  //// Write something to the file
+  //fprintf(file, "This is a new line added to the file.\n");
 
-	//writeutmp(user, tty);
+  //// Close the file after writing
+  //fclose(file);
 
-	if (initgroups(user, gid) < 0)
-		eprintf("initgroups:");
-	if (setgid(gid) < 0)
-		eprintf("setgid:");
-	if (setuid(uid) < 0)
-		eprintf("setuid:");
-
-	return dologin(pw, pflag);
+  return 0;
 }

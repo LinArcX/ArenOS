@@ -3,7 +3,7 @@
 # /etc/rc: system boot script
 #
 
-echo "The system is coming up.  Please wait."
+echo "ArenOS is coming up.  Please wait.."
 
 # Load configuration
 . /etc/rc.conf
@@ -11,7 +11,7 @@ echo "The system is coming up.  Please wait."
 # Start udev
 /bin/mount -t proc none /proc
 /bin/mount -t sysfs none /sys
-/sbin/start_udev
+#/sbin/start_udev
 
 # Create device-mapper device nodes and scan for LVM volume groups
 if [ -x /sbin/lvm ]; then
@@ -72,7 +72,7 @@ fi
 /sbin/sysctl -p > /dev/null
 
 # Update shared library links
-/sbin/ldconfig
+#/sbin/ldconfig
 
 # Configure host name
 if [ "$HOSTNAME" ]; then
@@ -81,7 +81,7 @@ if [ "$HOSTNAME" ]; then
 fi
 
 # Load random seed
-/bin/cat /var/lib/urandom/seed > /dev/urandom
+#/bin/cat /var/lib/urandom/seed > /dev/urandom
 
 # Configure system clock
 if [ "$TIMEZONE" ]; then
@@ -116,6 +116,6 @@ fi
 #	/etc/rc.single
 #fi
 
-if [ -x /etc/rc.multi ]; then
-	/etc/rc.multi
-fi
+#if [ -x /etc/rc.multi ]; then
+#	/etc/rc.multi
+#fi
