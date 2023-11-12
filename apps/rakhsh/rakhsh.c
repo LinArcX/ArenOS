@@ -2,10 +2,64 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <termios.h>
 
 #define RAKHSH "Rakhsh"
+
+struct termios orig_termios;
+
+void disableRawMode() 
+{
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+}
+
+void enableRawMode() 
+{
+  tcgetattr(STDIN_FILENO, &orig_termios);
+  atexit(disableRawMode);
+
+  struct termios raw = orig_termios;
+  raw.c_lflag &= ~(ECHO | ICANON | ISIG);
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+
+
+  //tcgetattr(STDIN_FILENO, &orig_termios);
+  //atexit(disableRawMode);
+
+  //struct termios raw = orig_termios;
+  //raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+  //raw.c_oflag &= ~(OPOST);
+  //raw.c_cflag |= (CS8);
+  //raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+
+  //// Set the terminal to non-blocking mode
+  //raw.c_cc[VMIN] = 0;
+  //raw.c_cc[VTIME] = 0;
+
+  //tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+
+  //// Set the terminal to non-blocking mode using fcntl
+  //int flags = fcntl(STDIN_FILENO, F_GETFL);
+  //flags |= O_NONBLOCK;
+  //fcntl(STDIN_FILENO, F_SETFL, flags);
+
+  ////fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
+}
+
+//char readKey() 
+//{
+//  char c;
+//  int nread = read(STDIN_FILENO, &c, 1);
+//  if (nread == -1) 
+//  {
+//    // Handle non-blocking read error
+//    return '\0';
+//  }
+//  return (nread == 1) ? c : '\0';
+//}
 
 void 
 processConfigurations()
@@ -206,25 +260,68 @@ execute(char** args)
   return launch(args);
 }
 
+#include <ctype.h>
 void
 processCommands(void)
 {
+  enableRawMode();
   char *line = NULL;
   char **args = NULL;
   int status = 1;
 
-  while (status)
+  char c;
+  while (read(STDIN_FILENO, &c, 1) == 1 && c != 'q') 
   {
-    printf("> ");
-    line = readLine();
-    args = splitLine(line);
-    status = execute(args);
+    if (iscntrl(c)) 
+    {
+      if (c == 12)
+      { 
+        // Ctrl+l (Clear screen)
+        printf("\e[1;1H\e[2J");
+        continue;
+      }
+      else if (c == 21)
+      { 
+        // Ctrl+l (Clear screen)
+        printf("\033[K");
+        continue;
+      }
+      else
+      {
+        printf("%d\n", c);
+      }
+    } else {
+      printf("%d ('%c')\n", c, c);
+    }
+  }
 
-    free(line);
-    line = NULL;
-    free(args);
-    args = NULL;
-  } 
+  //while (status)
+  //{
+    //printf("Rakhsh → ");
+    //char c = readKey();
+
+
+    //while (read(STDIN_FILENO, &c, 1) == 1)
+    //{
+    //  else
+    //  {
+    //    // Read the rest of the line
+    //    //ungetc(c, stdin);
+    //    //line = readLine();
+    //    //args = splitLine(line);
+    //    //status = execute(args);
+
+    //    //free(line);
+    //    //line = NULL;
+    //    //free(args);
+    //    //args = NULL;
+    //  }
+    //}
+
+
+  //} 
+
+  disableRawMode();
 }
 
 void
@@ -239,8 +336,6 @@ main(int argc, char **argv)
   // clear the screen at startup
   printf("\e[1;1H\e[2J"); 
 
-  // TODO: how to not inherit commands from parent shell?
-  
   processConfigurations();
   processCommands();
   shutdown();
