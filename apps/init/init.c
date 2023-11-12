@@ -12,6 +12,7 @@
 static void sigreap(void);
 static void sigreboot(void);
 static void sigpoweroff(void);
+static void login(void);
 static void spawn(char *const []);
 
 static struct {
@@ -24,9 +25,12 @@ static struct {
 	{ SIGINT,  sigreboot   },
 };
 
-static char *const initcmd[]     = { "/apps/init/init.cfg", NULL };
-static char *const rebootcmd[]   = { "/apps/init/reboot.cfg", "reboot", NULL };
-static char *const poweroffcmd[] = { "/apps/init/poweroff.cfg", "poweroff", NULL };
+static char *const initcmd[]     = { "/etc/init.rc", NULL };
+static char *const logincmd[]    = { "/bin/login", NULL, NULL };
+static char *const rebootcmd[]   = { "/etc/shutdown.rc", "reboot", NULL };
+static char *const poweroffcmd[] = { "/etc/shutdown.rc", "poweroff", NULL };
+
+
 
 static sigset_t set;
 
@@ -87,6 +91,16 @@ spawn(char *const argv[])
 static void
 sigreap(void)
 {
+  char *shlvl_value = getenv("SHLVL");
+  if (shlvl_value != NULL) {
+    int shl_level = atoi(shlvl_value);
+    if(shl_level <= 1)
+    {
+      login();
+    }
+  }
+
+  // wait for all PIDs to die
 	while (waitpid(-1, NULL, WNOHANG) > 0)
 		;
 	alarm(TIMEO);
@@ -95,11 +109,17 @@ sigreap(void)
 static void
 sigreboot(void)
 {
-	spawn(rcrebootcmd);
+	spawn(rebootcmd);
 }
 
 static void
 sigpoweroff(void)
 {
-	spawn(rcpoweroffcmd);
+	spawn(poweroffcmd);
+}
+
+static void
+login(void)
+{	
+  spawn(logincmd);
 }

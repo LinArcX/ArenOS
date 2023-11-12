@@ -1,21 +1,20 @@
-.Dd December 4, 2014
-.Dt SINIT 8 sinit\-VERSION
+.Dd November 12, 2023
+.Dt SINIT 8 sinit
 .Os
 .Sh NAME
 .Nm sinit
-.Nd simple init
+.Nd simple init tailored to work with ArenOS
 .Sh DESCRIPTION
 .Nm
-is a simple init.  It is configured by modifying
-.Dq config.h
+is a simple init. You can configure it just by modifying
+.Dq init.c
 and recompiling the code.
 .Ss Init sequence
 By default
 .Nm
 will execute
-.Dq /bin/rc.init .
-You can chain your init scripts together at that point to allow for
-single-user and multi-user operation.
+.Dq /etc/rc.init .
+You can chain your init scripts together at that point.
 .Ss Signal handling
 .Nm
 will respond to the following signals:
@@ -23,17 +22,18 @@ will respond to the following signals:
 .It USR1
 Default action is to initiate the shutdown sequence by
 executing
-.Dq /bin/rc.shutdown poweroff .
+.Dq /etc/shutdown.rc poweroff .
 .It INT
 Default action is to initiate the reboot sequence by
 executing
-.Dq /bin/rc.shutdown reboot .
+.Dq  /etc/shutdown.rc reboot .
 .It CHLD
-Reap children.
+Reap children. This is also where we detect if $SHLVL is less than 1, we'll trigger
+.Dq /bin/login .
 .El
 .Ss General considerations
 Running the
-.Dq rc.shutdown
+.Dq shutdown.rc
 script directly is not recommended.  If any
 process in your session has stale filesystem references then it is
 likely your init scripts will fail to unmount the filesystem cleanly.
@@ -57,4 +57,5 @@ respawning mechanism to restart it.
 .Xr getty 8 ,
 .Xr killall5 8
 .Sh AUTHORS
-.An Dimitris Papastamos Aq Mt sin@2f30.org .
+.An Dimitris Papastamos Aq Mt sin@2f30.org
+.An Saeed Mirzakhani Aq Mt mirzakhani.saeed69@gmail.com
